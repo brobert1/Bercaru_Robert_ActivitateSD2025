@@ -1,0 +1,5 @@
+﻿  index.c
+C:\Users\Robert\Desktop\SDD\Seminar4\Seminar4\index.c(36,12): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\Robert\Desktop\SDD\Seminar4\Seminar4\index.c(171,9): warning C4477: 'printf' : format string '%i' requires an argument of type 'int', but variadic argument 1 has type 'int (__cdecl *)(N *)'
+C:\Users\Robert\Desktop\SDD\Seminar4\Seminar4\index.c(171,9): warning C4313: 'printf': '%i' in format string conflicts with argument 1 of type 'int (__cdecl *)(N *)'
+  Seminar4.vcxproj -> C:\Users\Robert\Desktop\SDD\Seminar4\ARM64\Debug\Seminar4.exe
