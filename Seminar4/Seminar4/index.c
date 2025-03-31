@@ -61,17 +61,16 @@ void afisareListaMasini(N* nod) {
 	while (nod) {
 		afisareMasina(nod->info);
 		nod = nod->next;
-
 	}
 }
 
-void adaugaMasinaInLista(Masina masinaNoua, N** lista) {
+void adaugaMasinaInLista(N** lista, Masina masinaNoua) {
 	//adauga la final in lista primita o noua masina pe care o primim ca parametru
 	N* nodNou;
 	nodNou = (N*)malloc(sizeof(N));
 	nodNou->info = masinaNoua;
 	nodNou->next = NULL;
-
+	
 	if ((*lista) == NULL) {
 		(*lista) = nodNou;
 	}
@@ -82,7 +81,6 @@ void adaugaMasinaInLista(Masina masinaNoua, N** lista) {
 		}
 		aux->next = nodNou;
 	}
-
 }
 
 void adaugaLaInceputInLista(/*lista de masini*/ Masina masinaNoua) {
@@ -93,20 +91,28 @@ N* citireListaMasiniDinFisier(const char* numeFisier) {
 	//functia primeste numele fisierului, il deschide si citeste toate masinile din fisier
 	//prin apelul repetat al functiei citireMasinaDinFisier()
 	//ATENTIE - la final inchidem fisierul/stream-ul
-	FILE* f = fopen(numeFisier, "r");
+
+	FILE* f;
+	f = fopen(numeFisier, "r");
 	N* lista = NULL;
+
 	while (!feof(f)) {
-		Masina m = citireMasinaDinFisier(f);
-		adaugaMasinaInLista(m, &lista);
+		Masina m;
+		m = citireMasinaDinFisier(f);
+		adaugaMasinaInLista(&lista, m);
 	}
+
 	fclose(f);
 	return lista;
 }
 
 void dezalocareListaMasini(N** lista) {
 	//sunt dezalocate toate masinile si lista de elemente
+
 	while ((*lista)) {
-		N* p = *lista;
+		N* p = (*lista);
+		(*lista) = (*lista)->next;
+
 		free(p->info.model);
 		free(p->info.numeSofer);
 		free(p);
@@ -115,13 +121,16 @@ void dezalocareListaMasini(N** lista) {
 
 float calculeazaPretMediu(N* lista) {
 	//calculeaza pretul mediu al masinilor din lista.
+
 	float suma = 0;
-	float contor = 0;
+	int contor = 0;
+
 	while (lista) {
 		suma += lista->info.pret;
 		contor++;
 		lista = lista->next;
 	}
+
 	if (contor == 0) {
 		return 0;
 	}
@@ -135,6 +144,7 @@ void stergeMasiniDinSeria(/*lista masini*/ char serieCautata) {
 
 float calculeazaPretulMasinilorUnuiSofer(N* lista, const char* numeSofer) {
 	//calculeaza pretul tuturor masinilor unui sofer.
+
 	float suma = 0;
 	while (lista) {
 		if (strcmp(lista->info.numeSofer, numeSofer) == 0) {
@@ -153,22 +163,23 @@ int getNrUsiMasinaScumpa(N* lista) {
 		while (lista) {
 			if (lista->info.pret > pretMaxim) {
 				nrUsi = lista->info.nrUsi;
-				pretMaxim = lista -> info.pret;
+				pretMaxim = lista->info.pret;
 			}
 			lista = lista->next;
 		}
-		return nrUsi;
 	}
-	return 0;
-};
+}
 
 int main() {
 	N* nod;
 	nod = citireListaMasiniDinFisier("masini.txt");
 	afisareListaMasini(nod);
 	float medie = calculeazaPretMediu(nod);
+	printf("Media este : %.2f", medie);
+	float sumaSofer = calculeazaPretulMasinilorUnuiSofer(nod, "Ionescu");
+	printf("\nSuma soferului este : %.2f", sumaSofer);
 	int nrUsi = getNrUsiMasinaScumpa(nod);
-	printf("%i", getNrUsiMasinaScumpa);
+	printf("\nNumarul de usi ale celei mai scumpe masini este: %i", nrUsi);
 	dezalocareListaMasini(&nod);
 	return 0;
 }
