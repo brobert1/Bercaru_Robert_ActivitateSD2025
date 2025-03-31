@@ -1,3 +1,0 @@
-﻿  main.c
-C:\Users\Robert\Desktop\SDD\seminar3\Seminar3\Seminar3\main.c(64,11): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-  Seminar3.vcxproj -> C:\Users\Robert\Desktop\SDD\seminar3\Seminar3\ARM64\Debug\Seminar3.exe
