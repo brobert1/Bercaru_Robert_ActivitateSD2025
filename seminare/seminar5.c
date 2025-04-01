@@ -3,9 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-//trebuie sa folositi fisierul masini.txt
-//sau va creati un alt fisier cu alte date
-
 struct StructuraMasina {
 	int id;
 	int nrUsi;
@@ -14,21 +11,21 @@ struct StructuraMasina {
 	char* numeSofer;
 	unsigned char serie;
 };
+
 typedef struct StructuraMasina Masina;
 
-//creare structura pentru un nod dintr-o lista dublu inlantuita
-struct Nod {
-    Masina info;
-    struct Nod* urmator;
-    struct Nod* precedent;
+struct Nod
+{
+	Masina info;
+	struct Nod* next;
+	struct Nod* prev;
 };
 typedef struct Nod Nod;
 
-//creare structura pentru Lista Dubla 
 struct ListaDubla
 {
-    Nod* prim;
-    Nod* ultim;
+	Nod* inceput;
+	Nod* final;
 };
 typedef struct ListaDubla Lista;
 
@@ -44,11 +41,11 @@ Masina citireMasinaDinFisier(FILE* file) {
 	m1.pret = atof(strtok(NULL, sep));
 	aux = strtok(NULL, sep);
 	m1.model = malloc(strlen(aux) + 1);
-	strcpy(m1.model, aux);
+	strcpy_s(m1.model, strlen(aux) + 1, aux);
 
 	aux = strtok(NULL, sep);
 	m1.numeSofer = malloc(strlen(aux) + 1);
-	strcpy(m1.numeSofer, aux);
+	strcpy_s(m1.numeSofer, strlen(aux) + 1, aux);
 
 	m1.serie = *strtok(NULL, sep);
 	return m1;
@@ -63,120 +60,165 @@ void afisareMasina(Masina masina) {
 	printf("Serie: %c\n\n", masina.serie);
 }
 
-void afisareInceputListaMasini(Lista lista) {
-    Nod* p = lista.prim;
-    while (p)
-    {
-        afisareMasina(p->info);
-        p = p->urmator;
-    }
+void afisareListaMasiniDeLaInceput(Lista lista) {
+	Nod* p = lista.inceput;
+	while (p)
+	{
+		afisareMasina(p->info);
+		p = p->next;
+	}
 }
 
-void afisareSfarsitListaMasini(Lista lista) {
-    Nod* p = lista.ultim;
-    while (p)
-    {
-        afisareMasina(p->info);
-        p = p->precedent;
-    }
+void afisareListaMasiniDeLaFinal(Lista lista) {
+	Nod* p = lista.final;
+	while (p)
+	{
+		afisareMasina(p->info);
+		p = p->prev;
+	}
 }
 
-void adaugaMasinaInLista(Lista* const lista, Masina masinaNoua) { // se recomanda prin pointer constant
-    Nod* nou = (Nod*)malloc(sizeof(Nod));
-    nou->info = masinaNoua;
-    nou->urmator = NULL;
-    nou->precedent = lista->ultim;
-    if (lista->ultim) // daca exista ultimul nod
-    {
-        lista->ultim->urmator = nou;
-    }
-    else
-    {
-        lista->prim = nou;
-    }
-    lista->ultim = nou;
+void adaugaMasinaInLista(Lista* lista, Masina masinaNoua) {
+	Nod* nodNou = (Nod*)malloc(sizeof(Nod));
+	nodNou->info = masinaNoua;
+	nodNou->next = NULL;
+	nodNou->prev = lista->final;
+
+	if (lista->final != NULL)
+		lista->final->next = nodNou;
+	else
+		lista->inceput = nodNou;
+	lista->final = nodNou;
 }
 
-void adaugaLaInceputInLista(Lista* list, Masina masinaNoua) {
-    Nod* nou = (Nod*)malloc(sizeof(Nod));
-    nou->info = masinaNoua;
-    nou->urmator = list->prim;
-    if ((*list).prim)
-    {
-        list->prim->precedent = nou;
-    }
-    else
-    {
-        list->ultim = nou;
-    }
-    nou->precedent = NULL;
-    list->prim = nou;
+void adaugaLaInceputInLista(Lista* lista, Masina masinaNoua) {
+	Nod* nodNou = (Nod*)malloc(sizeof(Nod));
+	nodNou->info = masinaNoua;
+	nodNou->next = NULL;
+	nodNou->prev = lista->inceput;
+
+	if (lista->inceput)
+		lista->inceput->prev = nodNou;
+	else
+		lista->final = nodNou;
+
+	lista->inceput = nodNou;
 }
 
 Lista citireLDMasiniDinFisier(const char* numeFisier) {
 	FILE* f = fopen(numeFisier, "r");
-    Lista list;
-    list.prim = NULL;
-    list.ultim = NULL;
-
-    while (!feof(f))
-    {
-        // adaugaMasinaInLista(&list, citireMasinaDinFisier(f));
-        adaugaLaInceputInLista(&list, citireMasinaDinFisier(f));
-    }
-    fclose(f);
-    return list;
+	Lista lista;
+	lista.final = NULL;
+	lista.inceput = NULL;
+	while (!feof(f))
+	{
+		Masina m;
+		m = citireMasinaDinFisier(f);
+		adaugaMasinaInLista(&lista, m);
+	}
+	fclose(f);
+	return lista;
 }
 
-void dezalocareLDMasini(Lista* list) {
-    Nod* p = list->prim;
-    while (p->urmator)
-    {
-        free(p->info.numeSofer);
-        free(p->info.model);
-        p = p->urmator;
-        free(p->precedent);
-    }
-    free(p->info.numeSofer);
-    free(p->info.model);
-    free(p);
-    list->prim = NULL;
-    list->ultim = NULL;
+void dezalocareLDMasini(Lista* lista) {
+	while (lista->inceput)
+	{
+		if (lista->inceput->info.numeSofer)
+			free(lista->inceput->info.numeSofer);
+
+		if (lista->inceput->info.model)
+			free(lista->inceput->info.model);
+
+		Nod* p = lista->inceput;
+		lista->inceput = p->next;
+		free(p);
+	}
+	lista->final = NULL;
 }
 
-float calculeazaPretMediu(Lista list) {
-    Nod* aux = list.prim;
-    int suma = 0;
-    int index = 0;
+float calculeazaPretMediu(Lista lista) {
+	float suma = 0;
+	int contor = 0;
+	Nod* temp = lista.inceput;
+	while (temp)
+	{
+		suma += temp->info.pret;
+		contor++;
+		temp = temp->next;
+	}
 
-    while (aux)
-    {
-        suma += aux->info.pret;
-        index++;
-        aux = aux->urmator;
-    }
-	return suma / index;
+	return suma / contor;
 }
 
-void stergeMasinaDupaID(/*lista masini*/ int id) {
-	//sterge masina cu id-ul primit.
-	//tratati situatia ca masina se afla si pe prima pozitie, si pe ultima pozitie
+void stergeMasinaDupaID(Lista* lista, int id) {
+	Nod* p = lista->inceput;
+	while (p && p->info.id != id)
+	{
+		p = p->next;
+
+		if (p->prev)
+		{
+			p->prev->next = p->next;
+			if (p->next)
+				p->next->prev = p->prev;
+			else
+				lista->final = p->prev;
+		}
+		else
+		{
+			lista->inceput = p->next;
+			if (p->next)
+				p->next->prev = NULL;
+			else
+				lista->final = NULL;
+		}
+
+		free(p->info.model);
+		free(p->info.numeSofer);
+		free(p);
+	}
+
 }
 
-char* getNumeSoferMasinaScumpa(/*lista dublu inlantuita*/) {
-	//cauta masina cea mai scumpa si 
-	//returneaza numele soferului acestei maasini.
-	return NULL;
+char* getNumeSoferMasinaScumpa(Lista lista) {
+	Nod* p = lista.inceput;
+	Nod* pretMaximMasina = p;
+	if (lista.inceput)
+	{
+		while (p)
+		{
+			if (p->info.pret > pretMaximMasina->info.pret)
+				pretMaximMasina = p;
+			p = p->next;
+		}
+
+		char* numeSofer = (char*)malloc(strlen(pretMaximMasina->info.numeSofer) + 1);
+		strcpy_s(numeSofer, strlen(pretMaximMasina->info.numeSofer) + 1, pretMaximMasina->info.numeSofer);
+
+		return numeSofer;
+	}
 }
 
 int main() {
-    Lista list;
-    list = citireLDMasiniDinFisier("masini.txt");
-    // afisareInceputListaMasini(list);
-    afisareSfarsitListaMasini(list);
+	Lista lista;
+	lista = citireLDMasiniDinFisier("masini.txt");
+	afisareListaMasiniDeLaInceput(lista);
 
-    printf("Pretul mediu este: %.2f", calculeazaPretMediu(list));
+	printf_s("\n");
 
-    dezalocareLDMasini(&list);
+	afisareListaMasiniDeLaFinal(lista);
+
+	printf_s("\n");
+
+	float medie = calculeazaPretMediu(lista);
+	printf_s("Pretul mediu este: %.2f\n", medie);
+
+	stergeMasinaDupaID(&lista, 1);
+
+	char* numeSofer = getNumeSoferMasinaScumpa(lista);
+	printf_s("Numele soferului cu cea mai scumpa masina este: %s\n", numeSofer);
+	free(numeSofer);
+
+	dezalocareLDMasini(&lista);
 	return 0;
 }
